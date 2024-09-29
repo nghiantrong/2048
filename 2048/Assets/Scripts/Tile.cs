@@ -13,6 +13,8 @@ public class Tile : MonoBehaviour
     private Image background;
     private TextMeshProUGUI text;
 
+    public float tileAnimationDuration = 0.2f;
+
     private void Awake()
     {
         background = GetComponent<Image>();
@@ -40,5 +42,34 @@ public class Tile : MonoBehaviour
         this.cell.tile = this;
 
         transform.position = cell.transform.position;
+    }
+
+    public void MoveTo(TileCell cell)
+    {
+        if (this.cell != null)
+        {
+            this.cell.tile = null;
+        }
+
+        this.cell = cell;
+        this.cell.tile = this;
+
+        StartCoroutine(Animate(cell.transform.position));
+    }
+
+    private IEnumerator Animate(Vector3 to)
+    {
+        float elapsed = 0f;
+
+        Vector3 from = transform.position;
+
+        while (elapsed < tileAnimationDuration)
+        {
+            transform.position = Vector3.Lerp(from, to, elapsed / tileAnimationDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = to;
     }
 }
