@@ -223,3 +223,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e492fb6d24d84ce4b9292ece3432889a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tileAnimationDuration: 0.15

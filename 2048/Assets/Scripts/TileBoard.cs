@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class TileBoard : MonoBehaviour
 {
+    public GameManager GameManager;
+
     public Tile tilePrefab;
     public TileState[] tileStates;
 
@@ -21,13 +23,22 @@ public class TileBoard : MonoBehaviour
         tiles = new List<Tile>(16);
     }
 
-    private void Start()
+    public void ClearBoard()
     {
-        CreateTile();
-        CreateTile();
+        foreach (var cell in grid.cells)
+        {
+            cell.tile = null;
+        }
+
+        foreach (var tile in tiles)
+        {
+            Destroy(tile.gameObject);
+        }
+
+        tiles.Clear();
     }
 
-    private void CreateTile()
+    public void CreateTile()
     {
         Tile tile = Instantiate(tilePrefab, grid.transform);
         tile.SetState(tileStates[0], 2);
@@ -96,7 +107,12 @@ public class TileBoard : MonoBehaviour
         {
             if (adjacent.isOccupied)
             {
-                //merge
+                //merging
+                if (CanMerge(tile, adjacent.tile))
+                {
+                    Merge(tile, adjacent.tile);
+                    return true;
+                }
                 break;
             }
 
@@ -113,6 +129,35 @@ public class TileBoard : MonoBehaviour
         return false;
     }
 
+    private bool CanMerge(Tile a, Tile b)
+    {
+        return a.number == b.number && !b.locked;
+    }
+
+    private void Merge(Tile a, Tile b)
+    {
+        tiles.Remove(a);
+        a.Merge(b.cell);
+
+        int index = Mathf.Clamp(IndexOf(b.state) + 1, 0, tileStates.Length - 1);
+        int number = b.number * 2;
+
+        b.SetState(tileStates[index], number);
+    }
+    
+    //Get the state index
+    private int IndexOf(TileState state)
+    {
+        for (int i = 0; i < tileStates.Length; i++)
+        {
+            if (state == tileStates[i])
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private IEnumerator WaitForChanges()
     {
         waiting = true;
@@ -121,7 +166,58 @@ public class TileBoard : MonoBehaviour
 
         waiting = false;
 
-        //create new tile
+        foreach (var tile in tiles)
+        {
+            tile.locked = false;
+        }
+
+        if (tiles.Count != grid.size)
+        {
+            CreateTile();
+        }
+
         //check for game over
+        if (CheckForGameOver())
+        {
+            GameManager.GameOver();
+        }
+    }
+
+    private bool CheckForGameOver()
+    {
+        if (tiles.Count != grid.size)
+        {
+            return false;
+        }
+
+        foreach (var tile in tiles)
+        {
+            TileCell up = grid.GetAdjacentCell(tile.cell, Vector2Int.up);
+            TileCell down = grid.GetAdjacentCell(tile.cell, Vector2Int.down);
+            TileCell left = grid.GetAdjacentCell(tile.cell, Vector2Int.left);
+            TileCell right = grid.GetAdjacentCell(tile.cell, Vector2Int.right);
+
+            if (up != null && CanMerge(tile, up.tile))
+            {
+                return false;
+            }
+
+            if (down != null && CanMerge(tile, down.tile))
+            {
+                return false;
+            }
+
+            if (left != null && CanMerge(tile, left.tile))
+            {
+                return false;
+            }
+
+            if (right != null && CanMerge(tile, right.tile))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
