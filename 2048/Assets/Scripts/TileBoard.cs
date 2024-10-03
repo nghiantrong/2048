@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TileBoard : MonoBehaviour
 {
-    public GameManager GameManager;
+    public GameManager gameManager;
 
     public Tile tilePrefab;
     public TileState[] tileStates;
@@ -143,6 +143,8 @@ public class TileBoard : MonoBehaviour
         int number = b.number * 2;
 
         b.SetState(tileStates[index], number);
+
+        gameManager.IncreaseScore(number);
     }
     
     //Get the state index
@@ -179,7 +181,7 @@ public class TileBoard : MonoBehaviour
         //check for game over
         if (CheckForGameOver())
         {
-            GameManager.GameOver();
+            gameManager.GameOver();
         }
     }
 
